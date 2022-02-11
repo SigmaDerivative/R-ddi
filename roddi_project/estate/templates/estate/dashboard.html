@@ -1,0 +1,92 @@
+{% extends 'estate/base.html' %}
+{% block content %}
+<div class="row justify-content-start">
+    <h2>
+        Mine oppgjør
+    </h2>
+</div>
+
+<div class="row justify-content-start justify-content-md-center">
+    <h4>
+        Aktive oppgjør
+    </h4>
+</div>
+
+<div class="row">
+    {% for estate in estate_list %}
+        {% if estate.settled == False %}
+            <div class="col-12 col-md-12 border p-3 media-div">
+                <div class="row">
+
+                    <div class="col-12 col-md-2">
+                        <div class="row justify-content-center">
+                            <div class="media-img-div">
+                                <img src={{ estate.image.url }} alt="estate picture" class="img-thumbnail media-img">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-10">
+                        <div class="col">
+                            <div class="row justify-content-center justify-content-md-start">
+                                <a href="{{estate.get_absolute_url}}"><h4>{{estate.name}}</h4></a>
+                            </div>
+                            <div class="row justify-content-center justify-content-md-start">
+                                <small class="text-muted">
+                                    {{ estate.date|date:"d b, Y"}}
+                                </small> 
+                            </div>
+                            <div class="row justify-content-center justify-content-md-start">
+                                <p class="small">{{estate.description}}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+<div class="row justify-content-start justify-content-md-center">
+    <h4>
+        Gjennomførte oppgjør
+    </h4>
+</div>
+
+<div class="row">
+    {% for estate in estate_list %}
+        {% if estate.settled == True %}
+        <div class="col-12 col-md-12 border p-3 media-div">
+            <div class="row">
+
+                <div class="col-12 col-md-2">
+                    <div class="row justify-content-center">
+                        <div class="media-img-div">
+                            <img src={{ estate.image.url }} alt="estate picture" class="img-thumbnail media-img">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-10">
+                    <div class="col">
+                        <div class="row justify-content-center justify-content-md-start">
+                            <a href="{{estate.get_absolute_url}}"><h4>{{estate.name}}</h4></a>
+                        </div>
+                        <div class="row justify-content-center justify-content-md-start">
+                            <small class="text-muted">
+                                {{ estate.date|date:"d b, Y"}}
+                            </small> 
+                        </div>
+                        <div class="row justify-content-center justify-content-md-start">
+                            <p class="small">{{estate.description}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+</div>
+
+
+{% endblock content%}

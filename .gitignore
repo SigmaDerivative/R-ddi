@@ -1,0 +1,10 @@
+roddi_enviroment/
+roddi_enviroment/
+r-ddi_enironment/
+r-ddi_environment/
+__pycache__/
+db.sqlite3
+/.idea/
+/requirements.txt
+roddi_environment/
+media/

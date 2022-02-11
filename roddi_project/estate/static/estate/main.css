@@ -1,0 +1,198 @@
+/* generell styling */
+body {
+  margin-top: 76px;
+  background-color: white;
+  font-family: "Open Sans", sans-serif;
+}
+
+/* styling for navbar color */
+.colorStyling {
+  background-color: #f7f7f7;
+}
+
+/* navn bar styling */
+#navbarMenu li {
+  margin: 15px;
+  font-size: large;
+}
+
+.navbar {
+  border-bottom: 1px solid #dcdcdc;
+}
+
+/* animasjoner under nav bar linker */
+a.navLink {
+  color: #66b2ff;
+  appearance: none;
+  border: none;
+  height: inherit;
+  background-color: transparent;
+  display: inline-block;
+  text-decoration: none;
+}
+
+a.navLink::after {
+  content: "";
+  display: block;
+  height: 2px;
+  background: #007fff;
+  transition: 0.3s;
+  transform: scale(0);
+}
+
+a.navLink:hover::after {
+  transition: 0.3s;
+  transform: scale(1);
+}
+
+/* styling for at footer skal være bra */
+#main {
+  min-height: calc(100vh - 295px);
+}
+
+#content {
+  align: center;
+  padding: 50px;
+}
+
+#footer {
+  padding-top: 20px;
+  min-height: 220px;
+  background-color: #f7f7f7;
+  border-top: 1px solid #dcdcdc;
+  text-align: center;
+}
+
+/* styling for crispy forms */
+.formStyle {
+  border: 1px solid #dcdcdc;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #f7f7f7;
+}
+
+/* styling for generell innhold på siden */
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#title {
+  text-align: center;
+}
+
+a:link {
+  color: #66b2ff;
+}
+
+a:hover {
+  color: #007fff;
+  appearance: none;
+  text-decoration: none;
+}
+
+.media-img {
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 10%;
+}
+
+.media-img-profile {
+  min-width: 100%;
+  min-height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 50%;
+}
+
+.media-img-div {
+  width: 100px;
+  height: 100px;
+}
+
+.media-div {
+  margin: 20px 0;
+  background-color: #f7f7f7;
+  border-radius: 10px;
+  padding: 13px 13px 0;
+}
+
+.belonging-selector {
+  margin: 10px 10px 0;
+  width: 125px;
+}
+
+.user-info li {
+    display: inline-block;
+    color: black;
+    height: 36.44px;
+}
+ .user-info-format {
+    color: black;
+    margin-left: 15px;
+ }
+
+.userLink::after {
+  content: "";
+  display: block;
+  height: 1px;
+  background: black;
+  transition: 0.1s;
+  transform: scale(0);
+}
+.userLink:hover::after {
+  transition: 0.1s;
+  transform: scale(1);
+}
+
+.comment-button {
+  padding: -10px;
+  width: 125px;
+  margin: 10px;
+}
+
+.comment-section {
+  background-color: rgb(233, 233, 233);
+  border-radius: 0 0 10px 10px;
+  padding: 5px 10px 5px;
+  display: none;
+}
+
+.submit-button-div {
+  padding-top: 10px;
+}
+
+.comment-box {
+  background-color: white;
+  margin: 10px;
+}
+
+.media-img-homepage {
+  border-radius: 10px;
+    width: 1000px;
+    height: 350px;
+}
+
+.media-div-homepage {
+  margin: 10px 0;
+  width: 300px;
+  background-color: white;
+  border-radius: 10px;
+}
+
+.media-img-homepage-categories {
+  width: 50px;
+  height: 50px;
+}
+
+.notify {
+    padding: 20px;
+    margin-top: -10px;
+}
+
+.notify-button {
+    margin-top: -30px;
+}

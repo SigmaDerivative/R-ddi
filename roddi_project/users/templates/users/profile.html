@@ -1,0 +1,98 @@
+{%extends 'estate/base.html'%}
+{%block content%}
+<div class="row row-justify-content-start">
+    <h2>
+        Profil
+    </h2>
+</div>
+<div class="row">
+    <div class="col border media-div p-3">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-2">
+                <div class="row justify-content-center">
+                    <div class="media-img-div">
+                        <img src={{ user.profile.image.url }} alt="user picture" class="img-thumbnail media-img-profile">
+                    </div>
+                </div>
+            </div>
+            <div class="col col-md-4">
+                <div class="row justify-content-md-start justify-content-center">
+                    <h4>
+                        {{user.username}}
+                    </h4>
+                </div>
+                <div class="row justify-content-md-start justify-content-center">
+                    <h6>
+                        {{user.email}}
+                    </h6>
+                </div>
+            </div>
+        </div>
+
+        <hr>
+
+        <div class="container">
+            <div class="row" font style="font-size:14px;">
+                <div class="col-sm user-info-format">
+
+                    <!-- felter for visningsnavn, fornavn og etternavn bare BS,
+                    men finner ikke ut hvor feks user.profile.address peker til.
+                    bare å endre-->
+
+                    <p>Visningsnavn: {{user.profile.user_name}}</p>
+                    <p>Fornavn: {{user.profile.forename}}</p>
+                    <p>Etternavn: {{user.profile.surname}}</p>
+                    <p>Mobilnummer: {{user.profile.cellphone_number}}</p>
+                    <p>Adresse: {{user.profile.address}}</p>
+                </div>
+                <div class="col-sm user-info">
+                    <li>
+                        <a href="{% url 'dashboard'%}">
+                            <p class="user-info-format userLink">Arveoppgjør</p>
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstleyVEVO" target="_blank"}">
+                            <p class="user-info-format userLink">Lagrede gjenstander</p>
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstleyVEVO" target="_blank">
+                            <p class="user-info-format userLink">Kontakter</p>
+                        </a>
+                    </li>
+                </div>
+                <div class="col-sm user-info">
+                    <li>
+                        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstleyVEVO" target="_blank">
+                            <p class="user-info-format userLink">Instillinger</p>
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ&ab_channel=RickAstleyVEVO" target="_blank">
+                            <p class="user-info-format userLink">Instillinger for personvern</p>
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="{% url 'update-profile'%}">
+                            <p class="user-info-format userLink">Endre profil</p>
+                        </a>
+                    </li>
+                    <br>
+                    <li>
+                        <a href="{% url 'logoutpage'%}">
+                            <p class="user-info-format userLink">Logg ut</p>
+                        </a>
+                    </li>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{%endblock content%}

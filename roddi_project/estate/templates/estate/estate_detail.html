@@ -1,0 +1,459 @@
+{% extends 'estate/base.html' %}
+{% load crispy_forms_tags %}
+{% block content %}
+    {{ request.user.id|json_script:"user_id" }}
+    <div id="isDisabled" data-disabled = "{{estateDetail.settled}}"></div>
+
+    <div class="row justify-content-start"> <!-- rad 1 -->
+        <a href="{%url 'dashboard'%}">
+            <small>Tilbake</small>
+        </a>
+    </div>
+
+    <div class="row justify-content-start"> <!-- Rad 2 -->
+        <h2>{{estateDetail.name}}</h2>
+    </div>
+
+    <div class="row justify-content-start justify-content-md-center"> <!-- Rad 3 -->
+        <h4>
+            Prioritering av eiendeler til {{estateDetail.name}}
+        </h4>
+    </div>
+
+    <div class="row"> <!-- Rad 4 -->
+        {%for belongings in belongings_list%}
+            <div class="col-12 col-md-12 offset-1 offset-md-0 border media-div">
+                <div class="row">
+                    <div class="col-12 col-md-2">
+                        <div class="row justify-content-center">
+                            <div class="media-img-div">
+                                <img src={{ belongings.image.url }} alt="estate picture" class="img-thumbnail media-img">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-7">
+                        <div class="col">
+                            <div class="row justify-content-center justify-content-md-start">
+                                <h4 data-id={{belongings.id}}> {{belongings.name}} </h4>
+                            </div>
+                            <div class="row justify-content-center justify-content-md-start">
+                                <small> {{belongings.description}} </small> 
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-3">
+                        <div class="row justify-content-end">
+                            <input type="number" min="1" placeholder="Prioritering" class="belonging-selector priority-selector">
+                        </div>
+
+                        <div class="row justify-content-end">
+                            <select name= "state" class="belonging-selector status-selector">
+                                <option value = "Velg Handling" disabled>Velg handling</option>
+                                <option value = "Fordele">Ønsker</option>
+                                <option value = "Donere">Donere</option>
+                                <option value = "Kaste">Kaste</option>
+                            </select>  
+                        </div>
+
+                        <div class="row justify-content-end">
+                            <button class="btn btn-primary comment-button">Kommentarer</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row comment-section">
+                    <div class="col-12">
+                        <div class="row justify-content-center">
+                            <p>Kommentarer</p>
+                        </div>
+                        <div class="row justify-content-center">
+                            {%for comment in comment_list%}
+                                {%if comment.belonging == belongings%}
+                                    <div class="col-10 p-3 border comment-box">
+                                        <p><b>{{comment.user}}</b></p>
+                                        <p>{{comment.body}}</p>
+                                        <small class="text-muted">{{comment.created_on}}</small>
+                                    </div>
+                                {%endif%}
+                            {%endfor%}
+                        </div>
+                        <div class="row justify-content-center">
+                            <textarea class="comment-text-area col-10"></textarea>
+                        </div>
+                        <div class="row justify-content-center submit-button-div">
+                            <button class="btn btn-primary submit-button">Publiser kommentar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {%endfor%}
+
+    </div>
+
+
+
+<script>
+    //henter api iden til hver gjenstand i rekkefølgen de ligger på siden (selv når rekkefølgen er endret)
+    function get_belonging_ids(){
+        let ids = [];
+        for(let i = 0; i < priority_selectors_el.length; i++){
+            ids.push($('body').find('h4').eq(i+1)[0].getAttribute('data-id'))
+        }
+        return ids;
+    }
+
+    //hver form for status en kan sette på en gjenstand i rekkefølgen
+    const status_types = ["N/A", "Fordele", "Donere", "Kaste"]
+
+    //user api iden
+    const user_id = JSON.parse(document.getElementById('user_id').textContent);
+
+    //hvert html number-input felt
+    const priority_selectors_el = document.getElementsByClassName("priority-selector");
+    //hvert html nedtrekksmeny
+    const status_selectors_el = document.getElementsByClassName("status-selector");
+    
+    //putter på hver eventlistener
+    for (let i = 0; i < priority_selectors_el.length; i++) {
+        //sorteringer etc.
+        priority_selectors_el[i].addEventListener('input', change_status)
+        status_selectors_el[i].addEventListener('change', update_priority_on_all_applicable)
+        priority_selectors_el[i].addEventListener('input', sort_belongings)
+        status_selectors_el[i].addEventListener('change', sort_belongings)
+
+        //sendinger til databasen når man gjør endringer
+        priority_selectors_el[i].addEventListener('input', send_on_change)
+        status_selectors_el[i].addEventListener('change', send_on_change)
+
+        //kjører ny sort (slik at dette er siste eventlistener på objektet så dette blir fanget opp av initSort eventet)
+        //status_selectors_el[i].addEventListener('change', sort_belongings)
+    }
+
+    //endrer status til fordele når prioriteringen endrer seg
+    function change_status(e){
+        for(let i = 0; i < priority_selectors_el.length; i++){
+            if(priority_selectors_el[i] == e.path[0]){
+                status_selectors_el[i].selectedIndex = 1;
+            }
+        }
+    }
+
+    let priorities_from_html = [];
+    //henter prioriteringer fra html objektene i rekkefølgen de er i (ser ut til å funke selv etter at ting bytter plass, idk hvorfor)
+    function get_priorities_from_html(){
+        priorities_from_html = [];
+        for(let i = 0; i < priority_selectors_el.length; i++){
+            priorities_from_html.push(Number(priority_selectors_el[i].value))
+        }
+    }
+
+    //setter tall i html prioriteringsfeltene fra det som currently er i arrayen prio_from_html, altså så må man bytte på den i kode
+    //og så kjøre denne funksjonen
+    function set_priorities_from_array(){
+        for(let i = 0; i < priority_selectors_el.length; i++){
+            if(priorities_from_html[i] == 0){
+                priority_selectors_el[i].value = null;
+            } else {
+                priority_selectors_el[i].value = priorities_from_html[i];
+            }
+        }
+    }
+
+    //sorterer etter prioriteringsnummer
+    function sort_belongings(e){
+        let $belongings = $('.media-div');
+
+        //brukes til å se om to tall er like
+        let not_unique = true;
+        if(e.path[0].value > 0 && e.isTrusted){
+            //må sjekke om inputen øker eller minker (det har betydning for hvilken gjenstand som skal være første selector osv.)
+            let prev_index = $('.priority-selector').index(e.path[0]);
+            let old_num = priorities_from_html[prev_index];
+
+            get_priorities_from_html();
+            let new_num = priorities_from_html[prev_index];
+            
+            //om inputen er en økning
+            let increase = new_num > old_num;
+            
+            //her sjekker vi at alle tall er like ved å bruke tallet man øker om det er to like som "selector" i neste iterasjon
+            let selector = e.path[0];
+            if(!increase){
+                while(not_unique){
+                    not_unique = false;
+                    for(let i = 0; i < $belongings.length; i++){
+                        if($($belongings[i]).find('.priority-selector')[0].value == selector.value){
+                            if(selector != $($belongings[i]).find('.priority-selector')[0]){
+                                $($belongings[i]).find('.priority-selector')[0].value++;
+                                selector = $($belongings[i]).find('.priority-selector')[0];
+                                not_unique = true;
+                            }
+                        }
+                    }
+                }
+            } else {
+                console.log('økning')
+                while(not_unique){
+                    not_unique = false;
+                    for(let i = 0; i < $belongings.length; i++){
+                        if($('.priority-selector').eq(i)[0].value == selector.value){
+                            if(selector != $('.priority-selector').eq(i)[0]){
+                                $('.priority-selector').eq(i)[0].value--;
+                                selector = $('.priority-selector').eq(i)[0];
+                                not_unique = true;
+                            }
+                        }
+                    }
+                }
+                //for å passe på at pri 1 ikke blir 0
+                if(selector.value == 0){
+                    //øker target med 1 og så skal det øke alle andre oppover fra det
+                    selector.value = 1;
+                    //viktig å sette denne til true igjen
+                    not_unique = true;
+                    while(not_unique){
+                        not_unique = false;
+                        for(let i = 0; i < $belongings.length; i++){
+                            if($('.priority-selector').eq(i)[0].value == selector.value){
+                                if(selector != $('.priority-selector').eq(i)[0]){
+                                    $('.priority-selector').eq(i)[0].value++;
+                                    selector = $('.priority-selector').eq(i)[0];
+                                    not_unique = true;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        //setter alle priorities "ned" til 1,2,3,4 og i rekkefølge
+        //oppdaterer array med priorities
+        get_priorities_from_html();
+        let min;
+        //tallet som skal bli satt -1
+        let lowNumber = 0;
+        //finner minste tall høyere enn tallet som skal bli satt
+        let continues = true;
+        while(continues){
+            min = Math.max(...priorities_from_html);
+            priorities_from_html.forEach((num) => {
+                if(num < min && num > lowNumber){
+                    min = num;
+                }
+            })
+            //hvis det minste større tallet er det største så er det siste iterasjon
+            if(min == Math.max(...priorities_from_html)){
+                continues = false;
+            }
+            //setter det laveste tallet høyere enn lowNumber til en over lowNumber
+            priorities_from_html[priorities_from_html.indexOf(min)] = lowNumber + 1;
+            lowNumber++;
+            set_priorities_from_array();
+        }
+
+        let $sorted_belongings = $belongings.sort(function compare(a, b) {
+            //sorterer først på  status
+            if ($(a).find('.status-selector')[0].selectedIndex < $(b).find('.status-selector')[0].selectedIndex) {
+            return -1;
+            }
+            if ($(a).find('.status-selector')[0].selectedIndex > $(b).find('.status-selector')[0].selectedIndex) {
+                return 1;
+            }
+
+            //sorterer så for priority
+            if ($(a).find('.priority-selector')[0].value < $(b).find('.priority-selector')[0].value) {
+                return -1;
+            }
+            if ($(a).find('.priority-selector')[0].value > $(b).find('.priority-selector')[0].value) {
+                return 1;
+            }
+    
+            return 0;
+        })
+        $($belongings[0]).parent().append($sorted_belongings)
+    }
+
+    //setter disabled eller ikke på alle priorityselectors utifra dens statusselector
+    function update_priority_on_all_applicable(e){
+        for(let i = 0; i < status_selectors_el.length; i++){
+            //hvis den er på "Velg handling/N/A" så setter den disabled false og value null
+            if(status_selectors_el[i].selectedIndex == 0){
+                priority_selectors_el[i].value = null;
+                $('body').find('.priority-selector').eq(i).prop('disabled', false);
+            //hvis den er på donere eller kaste så disabler den og setter til null
+            } else if(status_selectors_el[i].selectedIndex > 1){
+                priority_selectors_el[i].value = null;
+                $('body').find('.priority-selector').eq(i).prop('disabled', true);
+            } else {
+                $('body').find('.priority-selector').eq(i).prop('disabled', false);
+            }
+        }
+    }
+
+    //herifra og ned er api
+
+    //hente gamle statuser og inserte
+    async function get_priorities_from_api(){
+        fetch('http://localhost:8000/apiapp/status/')
+            .then(res => res.json())
+            .then((out) => {
+
+                //api lenken til hver gjenstand i dødsboet i rekkefølgen gjenstandene ligger på siden
+                let api_belongings = [];
+                get_belonging_ids().forEach(id => {
+                    api_belongings.push('http://localhost:8000/apiapp/belonging/' + id + '/')
+                })
+
+                //hver status som brukeren som er på siden har lagt inn og som tilhører current detailview fra hele databasen av statuser
+                let users_statuses_in_this_estate = out.filter(status_object => (status_object.user == 'http://localhost:8000/apiapp/user/'+ user_id + '/' 
+                && api_belongings.includes(status_object.belonging)));
+
+                //oppdaterer prio_from_html arrayen slik at den har nok "plasser"
+                get_priorities_from_html()
+                //setter inn prioriteringen og status på hvert objekt
+                users_statuses_in_this_estate.forEach((status_object, i) => {
+                    let index = api_belongings.indexOf(status_object.belonging);
+                    priorities_from_html[index] = status_object.rating;
+
+                    status_selectors_el[index].selectedIndex = status_types.indexOf(status_object.alternatives);
+                })
+                set_priorities_from_array()
+                //oppdaterer disabled/able på alle etter at info fra databasen er hentet
+                update_priority_on_all_applicable()
+                //lager "fake" event for å dispatche sorting funksjonen for initial sort
+                //denne må være inni her for å ikke delete alle prio når den ikke har rukket å fetche
+                const initEvent = new Event('change', {
+                    bubbles: true
+                });
+                status_selectors_el[0].dispatchEvent(initEvent);
+                //må kjøres til slutt hvis ikke fjernes disabled av andre beregninger
+                disable_if_disabled();
+        }).catch(err => console.error(err));
+    }
+    //kjører funksjonen over når man laster inn siden
+    get_priorities_from_api()
+
+    //poste og putte herifra og nedover
+    function generate_JSON(){
+        let json_list = [];
+        get_priorities_from_html();
+
+        for(let i = 0; i < priorities_from_html.length; i++){
+            //console.log($('body').find('h4').eq(i+1)[0].innerHTML) alt måte å komme til belongingnavnet
+            //$($('body').find('.priority-selector').parent().parent().parent()[i]).find('h4')[0].innerHTML
+            //lager et objekt fra informasjon fra hver gjenstand på siden
+            let status_obj = {
+                'user' : 'http://localhost:8000/apiapp/user/'+ user_id + '/',
+                'belonging' : 'http://localhost:8000/apiapp/belonging/'+ $('body').find('h4').eq(i+1)[0].getAttribute('data-id') + '/',
+                'alternatives' : status_types[$('body').find('.status-selector')[i].selectedIndex],
+                'rating' : priorities_from_html[i]
+            }
+            json_list.push(JSON.stringify(status_obj))
+        }
+        return json_list;
+    }
+
+    //denne kjøres ved alle forandinger på siden og kjører en send til databasen (annen funksjon) per objekt på siden
+    function send_on_change(e){
+        generate_JSON().forEach(json_elem => {
+            send_to_database('http://localhost:8000/apiapp/status/', json_elem);    
+        });
+    }
+
+    //"hovedfunksjonen" for å sende all info til databasen
+    async function send_to_database(url = '', data = {}){
+        let a = JSON.parse(data)
+
+        fetch('http://localhost:8000/apiapp/status/')
+            .then(res => res.json())
+            .then((out) => {
+                let priorities_from_api = out;
+                for(let i = 0; i < priorities_from_api.length; i++){
+
+                    //hvis statusen finnes fra før så må vi gjøre PUT i steden for POST
+                    if(a.user == priorities_from_api[i].user && a.belonging == priorities_from_api[i].belonging){
+                        put_a(priorities_from_api[i], data);
+                        //stopper funksjonen så det ikke prøves å POSTes også
+                        return;
+                    }
+                }
+                post_a(url,data);
+
+            }).catch(err => console.error(err));
+    }
+
+    //POST funksjonen, denne kjøres kun når statusen for personen til objektet ikke finnes (aka første gang)
+    async function post_a(url, data){
+        const response = await fetch(url, {
+            method: 'POST', // *GET, POST, PUT, DELETE, etc.
+            mode: 'cors', // no-cors, *cors, same-origin
+            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: 'same-origin', // include, *same-origin, omit
+            headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            redirect: 'follow', // manual, *follow, error
+            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: data // body data type must match "Content-Type" header
+        });
+        return response.json();
+    }
+
+    //PUT funksjonen, denne endrer den tidligere statusen som er lagt inn i databasen
+    async function put_a(a, data){
+        //lager en riktig formatert JSON data input til databasen (statusID må være første key og den må JSON.parses)
+        let b = JSON.parse(data);
+        let c = {};
+        c['statusID'] = a.statusID;
+        for(var k in b) c[k]=b[k];
+        //d er det som sendes
+        let d = JSON.stringify(c);
+        const response = await fetch("http://localhost:8000/apiapp/status/" + a.statusID + "/", {
+            method: 'PUT', // *GET, POST, PUT, DELETE, etc.
+            mode: 'cors', // no-cors, *cors, same-origin
+            cache: 'no-cache', // *default, no-cache, reload, force-cache, only-if-cached
+            credentials: 'same-origin', // include, *same-origin, omit
+            headers: {
+            'Content-Type': 'application/json'
+            // 'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            redirect: 'follow', // manual, *follow, error
+            referrerPolicy: 'no-referrer', // no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url
+            body: d // body data type must match "Content-Type" header
+        });
+        return response.json();
+    }
+
+    //kommentarfunksjoner
+    //dette er for å vise og ikke vise kommentarfeltet
+    $('.comment-button').click(function(){
+        $('.comment-section').eq($('.comment-button').index(this)).slideToggle();
+    })
+    //eventlistener på hver knapp
+    $('.submit-button').click(function(){
+        let index = $('.submit-button').index(this)
+        let status_obj = {
+            'belonging' : 'http://localhost:8000/apiapp/belonging/'+ $('h4').eq(index+1)[0].getAttribute('data-id') + '/',
+            'user' : 'http://localhost:8000/apiapp/user/'+ user_id + '/',
+            'body' : $('.comment-text-area').eq(index).val(),
+        }
+        post_a('http://localhost:8000/apiapp/comment/',JSON.stringify(status_obj))
+        location.reload();
+    })
+
+    //disabler alle knapper om dødsboet er settled
+    function disable_if_disabled(){
+        if($("#isDisabled").attr("data-disabled") == "True"){
+            //dette gjelder status og priority sin felles klasse
+            $(".belonging-selector").prop("disabled", true);
+        }
+    }
+    //denne funksjonen må kjøres etter fetch og beregninger over
+
+</script>
+{% endblock content%}>
+

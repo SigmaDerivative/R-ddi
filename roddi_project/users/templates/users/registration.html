@@ -1,0 +1,13 @@
+{%extends 'estate/base.html'%}
+{% load crispy_forms_tags %}
+{%block content%}
+<div class="row justify-content-center">
+    <div class="col-12 col-md-6 formStyle">
+        <form method="POST">
+            {%csrf_token%}
+            {{ form|crispy }}
+            <button type="submit" class="btn btn-primary">Registrer</button>
+        </form>
+    </div>
+</div>
+{%endblock content%}

@@ -1,0 +1,22 @@
+{%extends 'estate/base.html'%}
+{%block content%}
+<div class="row row-justify-content-start">
+    <h2>
+        Send mail varsel
+    </h2>
+</div>
+<div class="row">
+    <div class="col border media-div">
+        <div class="row align-items-center">
+            {%for user in user_list%}
+                <div class="col-10 notify">
+                    <form method="GET" action="./{{user.email}}">
+                        <p><b>{{user.username}}</b></p><br>
+                        <button type="submit" class="btn btn-primary notify-button">Send varsel</button>
+                    </form>
+                </div>
+            {%endfor%}
+        </div>
+    </div>
+</div>
+{% endblock content%}
